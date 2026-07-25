@@ -1,7 +1,7 @@
 // src/components/Navbar.jsx
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Zap, User, MessageSquare, LayoutDashboard, LogOut } from 'lucide-react';
+import { Zap, User, MessageSquare, LayoutDashboard, LogOut, TrendingUp, Shield } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -42,6 +42,16 @@ export default function Navbar() {
               <Link to="/chat">
                 <button className="btn btn-ghost btn-sm">
                   <MessageSquare size={16} /> AI Chat
+                </button>
+              </Link>
+              <Link to="/analytics">
+                <button className="btn btn-ghost btn-sm">
+                  <TrendingUp size={16} /> Analytics
+                </button>
+              </Link>
+              <Link to="/admin">
+                <button className="btn btn-ghost btn-sm">
+                  <Shield size={16} /> Admin
                 </button>
               </Link>
               <Link to="/profile">

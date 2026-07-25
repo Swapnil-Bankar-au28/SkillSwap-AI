@@ -232,6 +232,71 @@ router.post('/:id/update-agreement', protect, async (req, res) => {
 });
 
 // ─────────────────────────────────────────
+// POST /api/matches/:id/roadmap
+// Generates a 4-week structured AI session roadmap using Gemini
+// ─────────────────────────────────────────
+router.post('/:id/roadmap', protect, async (req, res) => {
+  try {
+    const { generateRoadmap } = require('../services/aiService');
+    const match = await BarterMatch.findById(req.params.id);
+    if (!match) return res.status(404).json({ message: 'Match not found' });
+
+    const gives = match.exchangeSummary[0]?.gives || 'Skill A';
+    const gets  = match.exchangeSummary[0]?.gets  || 'Skill B';
+
+    const roadmapData = await generateRoadmap(gives, gets);
+    match.sessionRoadmap = roadmapData;
+    await match.save();
+
+    res.json(match);
+  } catch (error) {
+    console.error('Roadmap error:', error);
+    res.status(500).json({ message: 'Failed to generate roadmap' });
+  }
+});
+
+// ─────────────────────────────────────────
+// POST /api/matches/:id/toggle-roadmap-item
+// Toggle completion of a week in the roadmap
+// Body: { weekIndex }
+// ─────────────────────────────────────────
+router.post('/:id/toggle-roadmap-item', protect, async (req, res) => {
+  try {
+    const { weekIndex } = req.body;
+    const match = await BarterMatch.findById(req.params.id);
+    if (!match) return res.status(404).json({ message: 'Match not found' });
+
+    if (match.sessionRoadmap[weekIndex]) {
+      match.sessionRoadmap[weekIndex].completed = !match.sessionRoadmap[weekIndex].completed;
+      await match.save();
+    }
+    res.json(match);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to toggle item' });
+  }
+});
+
+// ─────────────────────────────────────────
+// POST /api/matches/:id/video-room
+// Create or get unique Jitsi Video Call room ID
+// ─────────────────────────────────────────
+router.post('/:id/video-room', protect, async (req, res) => {
+  try {
+    const match = await BarterMatch.findById(req.params.id);
+    if (!match) return res.status(404).json({ message: 'Match not found' });
+
+    if (!match.videoRoomId) {
+      match.videoRoomId = `SkillSwap-${match._id}-${Math.floor(1000 + Math.random() * 9000)}`;
+      await match.save();
+    }
+
+    res.json({ videoRoomId: match.videoRoomId, roomUrl: `https://meet.jit.si/${match.videoRoomId}` });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to create video room' });
+  }
+});
+
+// ─────────────────────────────────────────
 // HELPER: Award badges based on match activity
 // ─────────────────────────────────────────
 const awardBadges = async (participantIds, matchType) => {

@@ -1,12 +1,12 @@
 // src/pages/MatchDetail.jsx
-// Detailed match view with negotiation chat, agreement display, rating, and report
+// Detailed match view with negotiation chat, agreement display, AI Session Roadmap, Video Call room, rating, and report
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
-import { Send, Star, Flag, CheckCircle, Users, ArrowRight, Sparkles } from 'lucide-react';
+import { Send, Star, Flag, CheckCircle, Users, ArrowRight, Sparkles, Video, Calendar, ListChecks, CheckSquare, Square, X } from 'lucide-react';
 
 const statusClass = {
   proposed:    'badge-proposed',
@@ -19,17 +19,23 @@ const statusClass = {
 export default function MatchDetail() {
   const { id } = useParams();
   const { user } = useAuth();
-  const [match, setMatch]         = useState(null);
-  const [messages, setMessages]   = useState([]);
-  const [input, setInput]         = useState('');
-  const [sending, setSending]     = useState(false);
-  const [loading, setLoading]     = useState(true);
-  const [showRating, setShowRating] = useState(false);
+  const [match, setMatch]             = useState(null);
+  const [messages, setMessages]       = useState([]);
+  const [input, setInput]             = useState('');
+  const [sending, setSending]         = useState(false);
+  const [loading, setLoading]         = useState(true);
+  const [showRating, setShowRating]   = useState(false);
   const [ratingScore, setRatingScore] = useState(5);
   const [ratingComment, setRatingComment] = useState('');
-  const [ratingUser, setRatingUser] = useState('');
-  const [showReport, setShowReport] = useState(false);
+  const [ratingUser, setRatingUser]   = useState('');
+  const [showReport, setShowReport]   = useState(false);
   const [reportReason, setReportReason] = useState('');
+
+  // Video call & Roadmap states
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [videoUrl, setVideoUrl]             = useState('');
+  const [generatingRoadmap, setGeneratingRoadmap] = useState(false);
+
   const messagesEndRef = useRef(null);
 
   useEffect(() => { fetchAll(); }, [id]);
@@ -77,6 +83,38 @@ export default function MatchDetail() {
     } catch { toast.error('Failed to complete match'); }
   };
 
+  const handleStartVideo = async () => {
+    try {
+      const { data } = await api.post(`/matches/${id}/video-room`);
+      setVideoUrl(data.roomUrl);
+      setShowVideoModal(true);
+    } catch {
+      toast.error('Failed to start video call');
+    }
+  };
+
+  const handleGenerateRoadmap = async () => {
+    setGeneratingRoadmap(true);
+    try {
+      const { data } = await api.post(`/matches/${id}/roadmap`);
+      setMatch(data);
+      toast.success('AI Session Roadmap generated! 🚀');
+    } catch {
+      toast.error('Failed to generate roadmap');
+    } finally {
+      setGeneratingRoadmap(false);
+    }
+  };
+
+  const handleToggleRoadmapItem = async (weekIdx) => {
+    try {
+      const { data } = await api.post(`/matches/${id}/toggle-roadmap-item`, { weekIndex: weekIdx });
+      setMatch(data);
+    } catch {
+      toast.error('Failed to update item');
+    }
+  };
+
   const submitRating = async () => {
     try {
       await api.post(`/matches/${id}/rate`, { ratedUserId: ratingUser, score: ratingScore, comment: ratingComment });
@@ -119,17 +157,23 @@ export default function MatchDetail() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                 {match.participants.map((p, i) => (
-                  <>
-                    <span key={p._id} style={{ fontWeight: 600 }}>{p.name}</span>
-                    {i < match.participants.length - 1 && <ArrowRight key={`arrow-${i}`} size={16} color="var(--color-muted)" />}
-                  </>
+                  <div key={p._id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontWeight: 600 }}>{p.name}</span>
+                    {i < match.participants.length - 1 && <ArrowRight size={16} color="var(--color-muted)" />}
+                  </div>
                 ))}
               </div>
             </div>
+
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {isParticipant && ['negotiating', 'agreed'].includes(match.status) && (
+                <button className="btn btn-primary btn-sm" onClick={handleStartVideo} id="start-video-btn" style={{ background: 'var(--gradient-secondary)' }}>
+                  <Video size={16} /> Live Video Session
+                </button>
+              )}
               {match.status === 'completed' && isParticipant && (
                 <button className="btn btn-secondary btn-sm" onClick={() => { setShowRating(true); setRatingUser(others[0]?._id); }} id="rate-btn">
-                  <Star size={15} /> Rate
+                  <Star size={15} /> Rate Partner
                 </button>
               )}
               <button className="btn btn-ghost btn-sm" onClick={() => setShowReport(true)} style={{ color: 'var(--color-muted)' }} id="report-btn">
@@ -156,14 +200,14 @@ export default function MatchDetail() {
           )}
           {['negotiating', 'agreed'].includes(match.status) && isParticipant && (
             <div style={{ marginTop: '1rem' }}>
-              <button className="btn btn-primary btn-sm" onClick={complete} id="complete-match-btn">🏁 Mark as Completed</button>
+              <button className="btn btn-primary btn-sm" onClick={complete} id="complete-match-btn">🏁 Mark Swap as Completed</button>
             </div>
           )}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '1.5rem', alignItems: 'start' }}>
-          {/* ── Negotiation Chat ────────────────────────── */}
-          <div className="glass" style={{ display: 'flex', flexDirection: 'column', height: 520 }}>
+          {/* ── Left Column: Negotiation Chat ────────────────────────── */}
+          <div className="glass" style={{ display: 'flex', flexDirection: 'column', height: 560 }}>
             <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Sparkles size={18} color="var(--color-primary2)" />
               <h2 style={{ fontSize: '1rem', fontWeight: 700 }}>AI Negotiation Assistant</h2>
@@ -172,7 +216,7 @@ export default function MatchDetail() {
             <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {messages.length === 0 && (
                 <p style={{ color: 'var(--color-muted)', fontSize: '0.875rem', textAlign: 'center', padding: '2rem 0' }}>
-                  Ask the AI to help negotiate sessions, format, and schedule. It will draft a final agreement!
+                  Ask Gemini AI to help negotiate sessions, format, and schedule. It will draft your agreement!
                 </p>
               )}
               {messages.map((msg, i) => (
@@ -209,11 +253,11 @@ export default function MatchDetail() {
             </div>
           </div>
 
-          {/* ── Agreement + Participants ─────────────────── */}
+          {/* ── Right Column: Agreement + AI Roadmap + Participants ─────────────────── */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Agreement */}
             <div className="glass" style={{ padding: '1.5rem' }}>
-              <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <CheckCircle size={18} color="var(--color-success)" /> Barter Agreement
               </h2>
               {match.agreementText ? (
@@ -224,6 +268,40 @@ export default function MatchDetail() {
                 <p style={{ fontSize: '0.875rem', color: 'var(--color-muted)', fontStyle: 'italic' }}>
                   Agreement will be drafted once the match is accepted. Use the chat to negotiate!
                 </p>
+              )}
+            </div>
+
+            {/* AI Session Roadmap Module */}
+            <div className="glass" style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h2 style={{ fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <ListChecks size={18} color="var(--color-primary2)" /> AI Session Roadmap
+                </h2>
+                <button className="btn btn-secondary btn-sm" onClick={handleGenerateRoadmap} disabled={generatingRoadmap} style={{ fontSize: '0.75rem' }}>
+                  {generatingRoadmap ? 'Generating...' : '✨ Generate Roadmap'}
+                </button>
+              </div>
+
+              {!match.sessionRoadmap || match.sessionRoadmap.length === 0 ? (
+                <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted)', fontStyle: 'italic' }}>
+                  Click "Generate Roadmap" to create an AI-powered 4-week structured curriculum for your swap!
+                </p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {match.sessionRoadmap.map((item, idx) => (
+                    <div key={idx} style={{ padding: '0.75rem', background: 'var(--color-surface2)', borderRadius: 10, border: '1px solid var(--color-border)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => handleToggleRoadmapItem(idx)}>
+                        <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: item.completed ? '#10b981' : 'var(--color-text)' }}>
+                          Week {item.week}: {item.topic}
+                        </span>
+                        {item.completed ? <CheckSquare size={16} color="#10b981" /> : <Square size={16} color="var(--color-muted)" />}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', marginTop: '0.375rem', paddingLeft: '0.25rem' }}>
+                        {item.activities?.join(' · ')}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
@@ -255,6 +333,26 @@ export default function MatchDetail() {
             </div>
           </div>
         </div>
+
+        {/* ── Live Video Call Modal (Jitsi Embed) ────────── */}
+        {showVideoModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column', zIndex: 1000, padding: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white', fontWeight: 700 }}>
+                <Video size={20} color="#10b981" /> Live SkillSwap Session (Jitsi Video Call)
+              </div>
+              <button className="btn btn-danger btn-sm" onClick={() => setShowVideoModal(false)}>
+                <X size={16} /> Close Video Room
+              </button>
+            </div>
+            <iframe
+              src={videoUrl}
+              style={{ flex: 1, width: '100%', border: 'none', borderRadius: 16 }}
+              allow="camera; microphone; display-capture; autoplay; clipboard-write"
+              title="Jitsi Video Session"
+            />
+          </div>
+        )}
 
         {/* ── Rating Modal ────────────────────────────── */}
         {showRating && (

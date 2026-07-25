@@ -3,7 +3,7 @@
 
 import { X } from 'lucide-react';
 
-export default function SkillCard({ skill, type = 'offered', onDelete }) {
+export default function SkillCard({ skill, type = 'offered', isVerified = false, onVerify, onDelete }) {
   const isOffered = type === 'offered';
 
   return (
@@ -32,16 +32,28 @@ export default function SkillCard({ skill, type = 'offered', onDelete }) {
           </p>
         )}
       </div>
-      {onDelete && (
-        <button
-          className="btn btn-ghost btn-sm"
-          onClick={() => onDelete(skill._id)}
-          style={{ flexShrink: 0, padding: '0.25rem', color: 'var(--color-muted)' }}
-          title="Remove skill"
-        >
-          <X size={16} />
-        </button>
-      )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexShrink: 0 }}>
+        {isOffered && onVerify && (
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => onVerify(skill.skillName)}
+            style={{ fontSize: '0.75rem', padding: '0.25rem 0.625rem' }}
+            title="Take AI Verification Quiz"
+          >
+            {isVerified ? '✓ Verified' : 'Verify'}
+          </button>
+        )}
+        {onDelete && (
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={() => onDelete(skill._id)}
+            style={{ padding: '0.25rem', color: 'var(--color-muted)' }}
+            title="Remove skill"
+          >
+            <X size={16} />
+          </button>
+        )}
+      </div>
     </div>
   );
 }

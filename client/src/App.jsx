@@ -15,6 +15,9 @@ import Dashboard   from './pages/Dashboard';
 import Profile     from './pages/Profile';
 import Chat        from './pages/Chat';
 import MatchDetail from './pages/MatchDetail';
+import QuizPage    from './pages/QuizPage';
+import Analytics   from './pages/Analytics';
+import AdminPortal from './pages/AdminPortal';
 
 export default function App() {
   return (
@@ -28,10 +31,13 @@ export default function App() {
           <Route path="/register" element={<Register />} />
 
           {/* Protected routes */}
-          <Route path="/dashboard"   element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/profile"     element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/chat"        element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-          <Route path="/matches/:id" element={<ProtectedRoute><MatchDetail /></ProtectedRoute>} />
+          <Route path="/dashboard"       element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/profile"         element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/chat"            element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+          <Route path="/matches/:id"     element={<ProtectedRoute><MatchDetail /></ProtectedRoute>} />
+          <Route path="/quiz/:skillName" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
+          <Route path="/analytics"       element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+          <Route path="/admin"           element={<ProtectedRoute><AdminPortal /></ProtectedRoute>} />
 
           {/* 404 */}
           <Route path="*" element={

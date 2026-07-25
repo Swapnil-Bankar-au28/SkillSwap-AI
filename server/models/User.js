@@ -36,6 +36,15 @@ const userSchema = new mongoose.Schema(
       count:   { type: Number, default: 0 },
     },
 
+    // Verified skills (passed AI verification quiz)
+    verifiedSkills: [{ type: String }],
+
+    // Weekly availability (e.g. ['Monday Morning', 'Wednesday Evening'])
+    availability: [{ type: String }],
+
+    // User role for platform governance
+    role: { type: String, enum: ['user', 'admin'], default: 'user' },
+
     // Achievement badges
     badges: [{ type: String }],
   },

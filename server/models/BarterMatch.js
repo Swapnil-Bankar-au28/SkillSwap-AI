@@ -46,6 +46,19 @@ const barterMatchSchema = new mongoose.Schema(
 
     sessions: [sessionSchema],
 
+    // Unique Video Call Room ID for Jitsi live sessions
+    videoRoomId: { type: String, default: '' },
+
+    // AI-Generated 4-Week Session Roadmap / Checklist
+    sessionRoadmap: [
+      {
+        week:       { type: Number },
+        topic:      { type: String },
+        activities: [{ type: String }],
+        completed:  { type: Boolean, default: false },
+      },
+    ],
+
     // Ratings each participant gives after completion
     ratings: [
       {

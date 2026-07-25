@@ -22,11 +22,14 @@ app.use(cors({
 app.use(express.json()); // parse JSON request bodies
 
 // ── API Routes ───────────────────────────────────────────────────
-app.use('/api/auth',    require('./routes/auth'));
-app.use('/api/users',   require('./routes/users'));
-app.use('/api/chat',    require('./routes/chat'));
-app.use('/api/matches', require('./routes/matches'));
-app.use('/api/reports', require('./routes/reports'));
+app.use('/api/auth',      require('./routes/auth'));
+app.use('/api/users',     require('./routes/users'));
+app.use('/api/chat',      require('./routes/chat'));
+app.use('/api/matches',   require('./routes/matches'));
+app.use('/api/reports',   require('./routes/reports'));
+app.use('/api/quiz',      require('./routes/quiz'));
+app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/admin',     require('./routes/admin'));
 
 // ── Health Check ─────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

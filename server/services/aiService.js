@@ -149,4 +149,104 @@ The agreement should be casual but clear, summarizing what each person will do f
   return result.response.text();
 };
 
-module.exports = { sendChatMessage, extractSkillsFromReply, draftAgreement };
+// ── GENERATE SKILL VERIFICATION QUIZ ──────────────────────────────
+// Generates 5 multiple choice questions for a skill in JSON format
+const generateSkillQuiz = async (skillName) => {
+  const prompt = `Create a 5-question multiple choice verification quiz for the skill "${skillName}".
+Return ONLY a valid JSON object in triple backticks with this exact structure:
+\`\`\`json
+{
+  "skillName": "${skillName}",
+  "questions": [
+    {
+      "questionText": "Question 1 text...",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctIndex": 0,
+      "explanation": "Brief explanation of why this answer is correct."
+    }
+  ]
+}
+\`\`\`
+Ensure correctIndex is an integer from 0 to 3. Make questions test practical, real-world knowledge of ${skillName}.`;
+
+  const result = await model.generateContent(prompt);
+  const text   = result.response.text();
+  const match  = text.match(/```json\s*([\s\S]*?)\s*```/) || [null, text];
+  return JSON.parse(match[1]);
+};
+
+// ── GENERATE 4-WEEK SESSION ROADMAP ───────────────────────────────
+// Generates a structured 4-week learning plan for a barter match
+const generateRoadmap = async (gives, gets) => {
+  const prompt = `Create a 4-week structured barter exchange roadmap for a skill swap where one person teaches "${gives}" and the other teaches "${gets}".
+Return ONLY a valid JSON array wrapped in triple backticks:
+\`\`\`json
+[
+  {
+    "week": 1,
+    "topic": "Fundamentals & Setup",
+    "activities": ["Activity 1 for ${gives}", "Activity 1 for ${gets}"]
+  },
+  {
+    "week": 2,
+    "topic": "Core Concepts & Practice",
+    "activities": ["Activity 2 for ${gives}", "Activity 2 for ${gets}"]
+  },
+  {
+    "week": 3,
+    "topic": "Intermediate Application",
+    "activities": ["Activity 3 for ${gives}", "Activity 3 for ${gets}"]
+  },
+  {
+    "week": 4,
+    "topic": "Final Project & Review",
+    "activities": ["Final exercise for ${gives}", "Final exercise for ${gets}"]
+  }
+]
+\`\`\`
+Keep titles concise and actionable.`;
+
+  const result = await model.generateContent(prompt);
+  const text   = result.response.text();
+  const match  = text.match(/```json\s*([\s\S]*?)\s*```/) || [null, text];
+  return JSON.parse(match[1]);
+};
+
+// ── GENERATE AI MARKET & LEARNING INSIGHTS ────────────────────────
+// Provides personalized AI advice based on user skills
+const generateMarketInsights = async (skillsOffered, skillsWanted) => {
+  const prompt = `Act as a career and skill advisor.
+User offers: ${skillsOffered.map((s) => s.skillName).join(', ') || 'None listed'}
+User wants to learn: ${skillsWanted.map((s) => s.skillName).join(', ') || 'None listed'}
+
+Give 3 short, punchy, high-value AI recommendations (1-2 sentences each) on:
+1. High-value complementary skills they should offer next to increase match chances.
+2. Market trends regarding the skills they want to learn.
+3. A tip to get the most out of their skill swaps.
+
+Return ONLY a valid JSON object in triple backticks:
+\`\`\`json
+{
+  "recommendations": [
+    { "title": "Recommended Skill to Offer", "advice": "..." },
+    { "title": "Learning Trend Insight", "advice": "..." },
+    { "title": "Barter Optimization Tip", "advice": "..." }
+  ]
+}
+\`\`\``;
+
+  const result = await model.generateContent(prompt);
+  const text   = result.response.text();
+  const match  = text.match(/```json\s*([\s\S]*?)\s*```/) || [null, text];
+  return JSON.parse(match[1]);
+};
+
+module.exports = {
+  sendChatMessage,
+  extractSkillsFromReply,
+  draftAgreement,
+  generateSkillQuiz,
+  generateRoadmap,
+  generateMarketInsights,
+};
+

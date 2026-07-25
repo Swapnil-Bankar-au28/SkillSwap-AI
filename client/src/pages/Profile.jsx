@@ -1,14 +1,15 @@
-// src/pages/Profile.jsx
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import SkillCard from '../components/SkillCard';
 import toast from 'react-hot-toast';
-import { User, MapPin, FileText, Plus, ChevronDown, ChevronUp, Star } from 'lucide-react';
+import { User, MapPin, FileText, Plus, ChevronDown, ChevronUp, Star, Award, CheckCircle } from 'lucide-react';
 
 const CATEGORIES = ['Music', 'Design', 'Technology', 'Languages', 'Sports', 'Cooking', 'Business', 'Academic', 'Art', 'General'];
 
 export default function Profile() {
+  const navigate = useNavigate();
   const { user, updateUser } = useAuth();
   const [profile, setProfile]           = useState(null);
   const [loading, setLoading]           = useState(true);
@@ -185,7 +186,16 @@ export default function Profile() {
                 {profile?.skillsOffered?.length === 0 ? (
                   <p style={{ color: 'var(--color-muted)', fontSize: '0.875rem', textAlign: 'center', padding: '1rem' }}>No skills added yet. Click "Add" above!</p>
                 ) : (
-                  profile.skillsOffered.map((s) => <SkillCard key={s._id} skill={s} type="offered" onDelete={deleteOffered} />)
+                  profile.skillsOffered.map((s) => (
+                    <SkillCard
+                      key={s._id}
+                      skill={s}
+                      type="offered"
+                      isVerified={profile.verifiedSkills?.includes(s.skillName)}
+                      onVerify={(name) => navigate(`/quiz/${encodeURIComponent(name)}`)}
+                      onDelete={deleteOffered}
+                    />
+                  ))
                 )}
               </div>
             </div>
