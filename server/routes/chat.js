@@ -59,8 +59,17 @@ router.post('/message', protect, async (req, res) => {
       content,
     });
 
-    // ── 4. Send to Claude ───────────────────────────────────────
-    const aiReply = await sendChatMessage(content, formattedHistory, null, candidateMatches);
+    // Load full user profile to provide context to Gemini AI
+    const userProfile = await User.findById(userId).lean();
+
+    // ── 4. Send to Gemini AI ─────────────────────────────────────
+    let matchContext = null;
+    if (matchId) {
+      const BarterMatch = require('../models/BarterMatch');
+      matchContext = await BarterMatch.findById(matchId).lean();
+    }
+
+    const aiReply = await sendChatMessage(content, formattedHistory, matchContext, candidateMatches, userProfile);
 
     // ── 5. Parse reply for extracted skills ────────────────────
     const { hasExtraction, skillsOffered, skillsWanted, cleanReply } =

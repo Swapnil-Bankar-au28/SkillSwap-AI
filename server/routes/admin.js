@@ -11,13 +11,13 @@ const router = express.Router();
 
 // Middleware to check admin role
 const adminOnly = (req, res, next) => {
-  if (req.user.role === 'admin') {
-    next();
-  } else {
-    // For demo convenience, allow any logged-in user to access admin views if query ?demo=true is present
-    if (req.query.demo === 'true') return next();
-    res.status(403).json({ message: 'Access denied: Admin role required' });
+  if (req.user && req.user.role === 'admin') {
+    return next();
   }
+  return res.status(403).json({
+    message: 'Access denied: Admin role required. Use "Become Admin" on your profile page to test admin features.',
+    requiresAdmin: true
+  });
 };
 
 // ─────────────────────────────────────────

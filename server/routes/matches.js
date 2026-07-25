@@ -220,6 +220,9 @@ router.post('/:id/update-agreement', protect, async (req, res) => {
     const match = await BarterMatch.findById(req.params.id);
     if (!match) return res.status(404).json({ message: 'Match not found' });
 
+    const isParticipant = match.participants.some((p) => p.toString() === req.user._id.toString());
+    if (!isParticipant) return res.status(403).json({ message: 'Not authorized for this match' });
+
     if (agreementText) match.agreementText = agreementText;
     if (sessions)      match.sessions = sessions;
     match.status = 'agreed';
@@ -240,6 +243,9 @@ router.post('/:id/roadmap', protect, async (req, res) => {
     const { generateRoadmap } = require('../services/aiService');
     const match = await BarterMatch.findById(req.params.id);
     if (!match) return res.status(404).json({ message: 'Match not found' });
+
+    const isParticipant = match.participants.some((p) => p.toString() === req.user._id.toString());
+    if (!isParticipant) return res.status(403).json({ message: 'Not authorized for this match' });
 
     const gives = match.exchangeSummary[0]?.gives || 'Skill A';
     const gets  = match.exchangeSummary[0]?.gets  || 'Skill B';
@@ -266,6 +272,9 @@ router.post('/:id/toggle-roadmap-item', protect, async (req, res) => {
     const match = await BarterMatch.findById(req.params.id);
     if (!match) return res.status(404).json({ message: 'Match not found' });
 
+    const isParticipant = match.participants.some((p) => p.toString() === req.user._id.toString());
+    if (!isParticipant) return res.status(403).json({ message: 'Not authorized for this match' });
+
     if (match.sessionRoadmap[weekIndex]) {
       match.sessionRoadmap[weekIndex].completed = !match.sessionRoadmap[weekIndex].completed;
       await match.save();
@@ -284,6 +293,9 @@ router.post('/:id/video-room', protect, async (req, res) => {
   try {
     const match = await BarterMatch.findById(req.params.id);
     if (!match) return res.status(404).json({ message: 'Match not found' });
+
+    const isParticipant = match.participants.some((p) => p.toString() === req.user._id.toString());
+    if (!isParticipant) return res.status(403).json({ message: 'Not authorized for this match' });
 
     if (!match.videoRoomId) {
       match.videoRoomId = `SkillSwap-${match._id}-${Math.floor(1000 + Math.random() * 9000)}`;

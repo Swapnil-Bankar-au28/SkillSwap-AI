@@ -129,9 +129,59 @@ export default function Profile() {
                   <label className="label"><FileText size={14} style={{ verticalAlign: 'middle' }} /> Bio</label>
                   <textarea className="input" rows={3} placeholder="Tell others about yourself..." value={bioForm.bio} onChange={(e) => setBioForm({ ...bioForm, bio: e.target.value })} id="profile-bio" style={{ resize: 'vertical' }} />
                 </div>
-                <button type="submit" className="btn btn-primary" disabled={saving} id="save-profile-btn">
-                  {saving ? 'Saving...' : 'Save Profile'}
-                </button>
+
+                {/* Weekly Availability Slot Selector */}
+                <div className="form-group">
+                  <label className="label">📅 Weekly Availability Slots</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.25rem' }}>
+                    {['Mon Morning', 'Mon Evening', 'Wed Evening', 'Fri Evening', 'Sat Morning', 'Sun Afternoon'].map((slot) => {
+                      const isSelected = (profile?.availability || []).includes(slot);
+                      return (
+                        <button
+                          key={slot}
+                          type="button"
+                          className={`btn btn-sm ${isSelected ? 'btn-primary' : 'btn-secondary'}`}
+                          style={{ fontSize: '0.75rem', padding: '0.25rem 0.625rem' }}
+                          onClick={async () => {
+                            const current = profile?.availability || [];
+                            const updated = isSelected ? current.filter((s) => s !== slot) : [...current, slot];
+                            try {
+                              const { data } = await api.put('/users/me', { availability: updated });
+                              setProfile(data);
+                              updateUser(data);
+                              toast.success('Availability updated!');
+                            } catch { toast.error('Failed to update availability'); }
+                          }}
+                        >
+                          {isSelected ? '✓ ' : '+ '}{slot}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', alignItems: 'center' }}>
+                  <button type="submit" className="btn btn-primary" disabled={saving} id="save-profile-btn">
+                    {saving ? 'Saving...' : 'Save Profile'}
+                  </button>
+                  {profile?.role !== 'admin' && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={async () => {
+                        try {
+                          const { data } = await api.post('/users/make-admin');
+                          setProfile(data.user);
+                          updateUser(data.user);
+                          toast.success('🎉 Account promoted to Admin role!');
+                        } catch { toast.error('Promotion failed'); }
+                      }}
+                      style={{ fontSize: '0.75rem' }}
+                    >
+                      🛡️ Promote to Admin (Demo)
+                    </button>
+                  )}
+                </div>
               </form>
             </div>
           </div>

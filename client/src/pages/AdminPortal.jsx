@@ -7,40 +7,62 @@ import toast from 'react-hot-toast';
 import { Shield, Users, CheckCircle, Flag, AlertTriangle, Check, X } from 'lucide-react';
 
 export default function AdminPortal() {
-  const [stats, setStats]       = useState(null);
-  const [reports, setReports]   = useState([]);
-  const [loading, setLoading]   = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
     fetchAdminData();
   }, []);
 
   const fetchAdminData = async () => {
+    setAccessDenied(false);
     try {
       const [statsRes, reportsRes] = await Promise.all([
-        api.get('/admin/stats?demo=true'),
-        api.get('/admin/reports?demo=true'),
+        api.get('/admin/stats'),
+        api.get('/admin/reports'),
       ]);
       setStats(statsRes.data);
       setReports(reportsRes.data);
-    } catch {
-      toast.error('Failed to load admin dashboard');
+    } catch (err) {
+      if (err.response?.status === 403) {
+        setAccessDenied(true);
+      } else {
+        toast.error('Failed to load admin dashboard');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleResolveReport = async (reportId, action) => {
+  const handlePromoteAdmin = async () => {
     try {
-      await api.post('/admin/resolve-report?demo=true', { reportId, action });
-      toast.success(`Report ${action}ed!`);
-      setReports((prev) => prev.filter((r) => r._id !== reportId));
+      await api.post('/users/make-admin');
+      toast.success('🎉 Account promoted to Admin! Reloading...');
+      fetchAdminData();
     } catch {
-      toast.error('Action failed');
+      toast.error('Promotion failed');
     }
   };
 
   if (loading) return <div className="page" style={{ textAlign: 'center', paddingTop: '5rem' }}><div className="spinner" /></div>;
+
+  if (accessDenied) {
+    return (
+      <div className="page">
+        <div className="container" style={{ maxWidth: 600, textAlign: 'center', paddingTop: '3rem' }}>
+          <div className="glass" style={{ padding: '2.5rem', borderLeft: '4px solid var(--color-warning)' }}>
+            <Shield size={48} color="var(--color-warning)" style={{ marginBottom: '1rem' }} />
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Admin Access Required</h1>
+            <p style={{ color: 'var(--color-muted)', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+              Your current user account does not have the <strong>Admin</strong> role assigned. Click below to promote your account for testing and demo purposes.
+            </p>
+            <button className="btn btn-primary btn-lg" onClick={handlePromoteAdmin}>
+              🛡️ Promote My Account to Admin
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page">

@@ -64,9 +64,23 @@ When they agree, draft a final agreement text summarizing the terms.
 // history: array of { role: 'user'|'assistant', content: string }
 // matchContext: optional BarterMatch object for negotiation mode
 // candidateMatches: optional array of match candidates from matchingEngine
-const sendChatMessage = async (userMessage, history = [], matchContext = null, candidateMatches = null) => {
+const sendChatMessage = async (userMessage, history = [], matchContext = null, candidateMatches = null, userProfile = null) => {
   // Build the full system instruction (base + optional context)
   let systemInstruction = SYSTEM_PROMPT;
+
+  if (userProfile) {
+    const offeredStr = userProfile.skillsOffered?.map((s) => `${s.skillName} (${s.proficiency || 'Intermediate'})`).join(', ') || 'None listed yet';
+    const wantedStr  = userProfile.skillsWanted?.map((s) => `${s.skillName} (${s.urgency || 'Medium'} urgency)`).join(', ') || 'None listed yet';
+    const availStr   = userProfile.availability?.join(', ') || 'Not specified';
+
+    systemInstruction += `\n\nCURRENT USER PROFILE CONTEXT:
+- Name: ${userProfile.name}
+- Skills User Offers: ${offeredStr}
+- Skills User Wants to Learn: ${wantedStr}
+- Weekly Availability: ${availStr}
+- Verified Skills: ${userProfile.verifiedSkills?.join(', ') || 'None yet'}
+Use this exact profile information whenever the user asks about their skills, profile, or suitable matches!`;
+  }
 
   if (matchContext) {
     systemInstruction += '\n\n' + NEGOTIATION_CONTEXT(matchContext);
@@ -109,25 +123,28 @@ const sendChatMessage = async (userMessage, history = [], matchContext = null, c
 // Parses the AI's reply to check if it included a JSON skill extraction block.
 // Returns: { hasExtraction, skillsOffered, skillsWanted, cleanReply }
 const extractSkillsFromReply = (aiReply) => {
-  // Look for a ```json ... ``` block in the reply
-  const jsonMatch = aiReply.match(/```json\s*([\s\S]*?)\s*```/);
-  if (!jsonMatch) {
-    return { hasExtraction: false, skillsOffered: [], skillsWanted: [], cleanReply: aiReply };
-  }
+  if (!aiReply) return { hasExtraction: false, skillsOffered: [], skillsWanted: [], cleanReply: '' };
+
+  // Look for a ```json ... ``` or ``` ... ``` block in the reply
+  const jsonMatch = aiReply.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  const targetStr = jsonMatch ? jsonMatch[1] : aiReply;
 
   try {
-    const parsed = JSON.parse(jsonMatch[1]);
-    // Remove the JSON block from the reply so only conversational text remains
-    const cleanReply = aiReply.replace(/```json[\s\S]*?```/, '').trim();
-    return {
-      hasExtraction: parsed.extracted === true,
-      skillsOffered: parsed.skillsOffered || [],
-      skillsWanted:  parsed.skillsWanted  || [],
-      cleanReply,
-    };
+    const parsed = JSON.parse(targetStr.trim());
+    if (parsed && (parsed.extracted === true || parsed.skillsOffered || parsed.skillsWanted)) {
+      const cleanReply = aiReply.replace(/```(?:json)?[\s\S]*?```/gi, '').trim();
+      return {
+        hasExtraction: true,
+        skillsOffered: parsed.skillsOffered || [],
+        skillsWanted:  parsed.skillsWanted  || [],
+        cleanReply:    cleanReply || "I've detected skills in your message! Please confirm below to save them to your profile.",
+      };
+    }
   } catch {
-    return { hasExtraction: false, skillsOffered: [], skillsWanted: [], cleanReply: aiReply };
+    // If not JSON, return full clean reply
   }
+
+  return { hasExtraction: false, skillsOffered: [], skillsWanted: [], cleanReply: aiReply };
 };
 
 // ── DRAFT BARTER AGREEMENT ──────────────────────────────────────

@@ -29,18 +29,39 @@ router.get('/me', protect, async (req, res) => {
 // ─────────────────────────────────────────
 router.put('/me', protect, async (req, res) => {
   try {
-    const { name, bio, location } = req.body;
+    const { name, bio, location, availability } = req.body;
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     if (name)     user.name     = name;
     if (bio !== undefined) user.bio = bio;
     if (location !== undefined) user.location = location;
+    if (availability && Array.isArray(availability)) user.availability = availability;
 
     await user.save();
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: 'Failed to update profile' });
+  }
+});
+
+// ─────────────────────────────────────────
+// POST /api/users/make-admin
+// Self-service admin promotion for testing & demo purposes
+// ─────────────────────────────────────────
+router.post('/make-admin', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.role = 'admin';
+    if (!user.badges.includes('Platform Admin')) {
+      user.badges.push('Platform Admin');
+    }
+    await user.save();
+    res.json({ message: 'Account promoted to Admin role', user });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to promote account' });
   }
 });
 
