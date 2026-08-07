@@ -67,7 +67,7 @@ export default function Viewer3D({ configs }) {
       viewerRef.current = viewer
 
       // Load molecules from SMILES (3Dmol can parse SMILES via SDF)
-      const molecules = config.molecules || []
+      const molecules = config.molecules || (config.smiles ? [{ smiles: config.smiles }] : [])
       for (const mol of molecules) {
         if (mol.smiles) {
           // Use 3Dmol's built-in SMILES → 3D converter
