@@ -1,0 +1,55 @@
+llm:
+  # All agent models — using active working model gemini-3.1-flash-lite
+  classifier_model: gemini-3.1-flash-lite
+  research_model: gemini-3.1-flash-lite
+  storyboard_model: gemini-3.1-flash-lite
+  animation_model: gemini-3.1-flash-lite
+  verifier_model: gemini-3.1-flash-lite
+  evaluator_model: gemini-3.1-flash-lite
+
+
+
+tts:
+  provider: gtts            # gtts | elevenlabs | openai
+  language: en
+  slow: false
+  # elevenlabs:
+  #   voice_id: "21m00Tcm4TlvDq8ikWAM"
+  # openai:
+  #   voice: alloy            # alloy | echo | fable | onyx | nova | shimmer
+
+search:
+  provider: duckduckgo      # duckduckgo | tavily | serper
+  max_results: 6
+  trusted_domains:
+    - libretexts.org
+    - openstax.org
+    - khanacademy.org
+    - chemguide.co.uk
+    - hyperphysics.phy-astr.gsu.edu
+    - en.wikipedia.org
+    - nist.gov
+    - iupac.org
+
+pipeline:
+  max_revision_rounds: 3      # Max verifier-revision cycles per scene
+  scenes_per_video: 4         # Target scenes (3–5)
+  fallback_on_max_rounds: true # Ship best-so-far rather than fail hard
+  log_verification_rounds: true
+
+manim:
+  quality: medium_quality     # low_quality | medium_quality | high_quality
+  fps: 15
+  background_color: "#0d0d1a"
+  font: "Sans"
+
+server:
+  host: 0.0.0.0
+  port: 8000
+  cors_origins:
+    - "http://localhost:5173"
+    - "http://localhost:3000"
+
+output:
+  base_dir: outputs
+  keep_intermediate: true     # Keep per-scene mp4s and audio for debugging

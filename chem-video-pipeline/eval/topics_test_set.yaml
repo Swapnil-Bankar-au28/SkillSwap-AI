@@ -1,0 +1,130 @@
+# EduVis AI — Evaluation Test Set
+# 20 topics spanning difficulty: Grade 1 → PhD, across all subjects
+#
+# Run: python eval/accuracy_eval.py --topics eval/topics_test_set.yaml
+
+topics:
+  # ── Elementary (Grade 1-5) ──────────────────────────────────────────────────
+  - id: elem_01
+    topic: "Why is the sky blue?"
+    subject: physics
+    level: elementary
+    difficulty: 1
+
+  - id: elem_02
+    topic: "What is photosynthesis?"
+    subject: biology
+    level: elementary
+    difficulty: 1
+
+  - id: elem_03
+    topic: "What are atoms and molecules?"
+    subject: chemistry
+    level: elementary
+    difficulty: 2
+
+  # ── Middle School (Grade 6-8) ────────────────────────────────────────────────
+  - id: mid_01
+    topic: "Acid-base neutralization reaction"
+    subject: chemistry
+    level: middle
+    difficulty: 3
+
+  - id: mid_02
+    topic: "Newton's three laws of motion"
+    subject: physics
+    level: middle
+    difficulty: 3
+
+  - id: mid_03
+    topic: "How does DNA carry genetic information?"
+    subject: biology
+    level: middle
+    difficulty: 3
+
+  - id: mid_04
+    topic: "What is the Pythagorean theorem?"
+    subject: mathematics
+    level: middle
+    difficulty: 2
+
+  # ── High School (Grade 9-12) ──────────────────────────────────────────────────
+  - id: hs_01
+    topic: "Le Chatelier's principle in chemical equilibrium"
+    subject: chemistry
+    level: high_school
+    difficulty: 5
+
+  - id: hs_02
+    topic: "VSEPR theory and molecular geometry"
+    subject: chemistry
+    level: high_school
+    difficulty: 5
+
+  - id: hs_03
+    topic: "Wave-particle duality and the double-slit experiment"
+    subject: physics
+    level: high_school
+    difficulty: 6
+
+  - id: hs_04
+    topic: "Hess's law and enthalpy of reaction"
+    subject: chemistry
+    level: high_school
+    difficulty: 5
+
+  - id: hs_05
+    topic: "How does natural selection drive evolution?"
+    subject: biology
+    level: high_school
+    difficulty: 4
+
+  # ── Undergraduate (B.Sc.) ─────────────────────────────────────────────────────
+  - id: ug_01
+    topic: "SN2 reaction mechanism with nucleophilic attack"
+    subject: chemistry
+    level: undergraduate
+    difficulty: 7
+
+  - id: ug_02
+    topic: "Molecular orbital theory for homonuclear diatomics (H2)"
+    subject: chemistry
+    level: undergraduate
+    difficulty: 8
+
+  - id: ug_03
+    topic: "The Schrödinger equation and particle in a box"
+    subject: physics
+    level: undergraduate
+    difficulty: 8
+
+  - id: ug_04
+    topic: "Fourier transform and its applications"
+    subject: mathematics
+    level: undergraduate
+    difficulty: 7
+
+  # ── Graduate / PhD ─────────────────────────────────────────────────────────────
+  - id: grad_01
+    topic: "Diels-Alder cycloaddition mechanism and stereochemistry"
+    subject: chemistry
+    level: graduate
+    difficulty: 9
+
+  - id: grad_02
+    topic: "E2 elimination mechanism vs SN2 competition"
+    subject: chemistry
+    level: graduate
+    difficulty: 9
+
+  - id: grad_03
+    topic: "Density functional theory (DFT) basics for computational chemistry"
+    subject: chemistry
+    level: phd
+    difficulty: 10
+
+  - id: grad_04
+    topic: "How does CRISPR-Cas9 gene editing work at the molecular level?"
+    subject: biology
+    level: graduate
+    difficulty: 9

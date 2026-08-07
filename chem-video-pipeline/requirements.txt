@@ -1,0 +1,53 @@
+# ── Core LLM ──────────────────────────────────────────────────────────────────
+google-generativeai>=0.7.0
+google-genai>=0.3.0
+
+# ── Web Framework ─────────────────────────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+websockets>=12.0
+
+# ── Data Validation ──────────────────────────────────────────────────────────
+pydantic>=2.7.0
+pydantic-settings>=2.3.0
+
+# ── Config ────────────────────────────────────────────────────────────────────
+pyyaml>=6.0.1
+python-dotenv>=1.0.1
+
+# ── Animation ─────────────────────────────────────────────────────────────────
+# manim>=0.18.1  # Install separately — requires LaTeX+Cairo. See INSTALL.md
+
+# ── Chemistry ─────────────────────────────────────────────────────────────────
+# rdkit>=2024.3.1  # Install via conda. See INSTALL.md
+
+# ── Video Assembly ────────────────────────────────────────────────────────────
+moviepy>=1.0.3
+imageio[ffmpeg]>=2.34.0
+Pillow>=10.3.0
+
+# ── TTS ───────────────────────────────────────────────────────────────────────
+gTTS>=2.5.1
+openai>=1.30.0          # Optional: OpenAI TTS
+elevenlabs>=1.0.0       # Optional: ElevenLabs TTS
+
+# ── Search ────────────────────────────────────────────────────────────────────
+duckduckgo-search>=6.1.0
+requests>=2.32.0
+beautifulsoup4>=4.12.3
+lxml>=5.2.0
+
+# ── CLI & Logging ─────────────────────────────────────────────────────────────
+rich>=13.7.0
+typer>=0.12.0
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest>=8.2.0
+pytest-asyncio>=0.23.0
+httpx>=0.27.0
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+jsonschema>=4.22.0
+aiofiles>=23.2.1
+python-slugify>=8.0.4

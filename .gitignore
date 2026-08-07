@@ -1,19 +1,38 @@
 # Dependencies
+**/node_modules/
 node_modules/
-client/node_modules/
-server/node_modules/
+
+# Python virtual environments
+**/.venv/
+**/venv/
+**/env/
+**/ENV/
+
+# Python cache & build
+**/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
 
 # Environment variables & secrets
-.env
-*.env
-server/.env
-client/.env
-.env.local
+**/.env
+**/.env.local
+**/.env.*.local
+!.env.example
 
 # Build outputs
-client/dist/
-dist/
-build/
+**/dist/
+**/build/
+**/.cache/
+.npm/
+
+# Generated Pipeline Outputs & Media
+**/outputs/
+**/media/
+**/tex_files/
+*.mp4
+*.wav
+*.mp3
 
 # Logs
 *.log
@@ -23,3 +42,6 @@ build/
 Thumbs.db
 .vscode/
 .idea/
+*.swp
+*.swo
+
