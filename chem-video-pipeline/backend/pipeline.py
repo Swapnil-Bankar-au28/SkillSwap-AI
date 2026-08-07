@@ -98,7 +98,7 @@ class Pipeline:
     ) -> PipelineResult:
         """Run the full pipeline for a given topic."""
         run_id = str(uuid.uuid4())[:8]
-        run_dir = Path(self.config.output.base_dir) / run_id
+        run_dir = self.config.output_dir / run_id
         run_dir.mkdir(parents=True, exist_ok=True)
 
         result = PipelineResult(run_id=run_id, topic=topic, subject="", level="", run_dir=run_dir)
