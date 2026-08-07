@@ -46,9 +46,9 @@ app.add_middleware(
 )
 
 # Serve output files statically
-outputs_dir = Path(config.output.base_dir)
-outputs_dir.mkdir(exist_ok=True)
-app.mount("/outputs", StaticFiles(directory=str(outputs_dir)), name="outputs")
+outputs_dir = config.output_dir
+outputs_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/outputs", StaticFiles(directory=outputs_dir), name="outputs")
 
 
 # ── In-memory run store ────────────────────────────────────────────────────────
