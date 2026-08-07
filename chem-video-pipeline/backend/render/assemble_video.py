@@ -111,13 +111,15 @@ def assemble_video(
     logger.info(f"[Assemble] Concatenating {len(clips)} scenes...")
     final = concatenate_videoclips(clips, method="compose")
 
-    # Write output
+    # Write output with temp audio in writable directory
     logger.info(f"[Assemble] Writing final video → {output_path}")
+    temp_audio = str(output_path.parent / f"{output_path.stem}_temp_audio.m4a")
     final.write_videofile(
         str(output_path),
         fps=15,
         codec="libx264",
         audio_codec="aac",
+        temp_audiofile=temp_audio,
         logger=None,
     )
 

@@ -87,10 +87,13 @@ def generate_scene_video(
         frames.append(np.array(img))
 
     clip = ImageSequenceClip(frames, fps=fps)
+    temp_audio = str(output_path.parent / f"{output_path.stem}_temp_audio.m4a")
     clip.write_videofile(
         str(output_path),
+        fps=fps,
         codec="libx264",
         audio_codec="aac",
+        temp_audiofile=temp_audio,
         logger=None,
     )
     clip.close()
