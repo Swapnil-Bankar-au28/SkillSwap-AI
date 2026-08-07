@@ -28,12 +28,13 @@ class BaseTTSProvider(ABC):
     def _get_duration(self, audio_path: Path) -> float:
         """Get audio duration using moviepy."""
         try:
-            from moviepy.editor import AudioFileClip
+            try:
+                from moviepy import AudioFileClip
+            except ImportError:
+                from moviepy.editor import AudioFileClip
             clip = AudioFileClip(str(audio_path))
             duration = clip.duration
             clip.close()
-            return duration
+            return float(duration)
         except Exception:
-            # Fallback: estimate ~150 words/minute
-            word_count = len(str(audio_path).split())
-            return max(5.0, word_count / 2.5)
+            return 5.0

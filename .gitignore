@@ -47,3 +47,5 @@ tex_files/
 *.swo
 .DS_Store
 Thumbs.db
+
+.vercel

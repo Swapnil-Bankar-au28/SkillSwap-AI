@@ -69,16 +69,27 @@ export default function App() {
   }
 
   const connectWebSocket = (id) => {
-    const wsUrl = `ws://${window.location.hostname}:8000/ws/${id}`
-    const ws = new WebSocket(wsUrl)
-    wsRef.current = ws
+    try {
+      const isHttps = window.location.protocol === 'https:'
+      const protocol = isHttps ? 'wss:' : 'ws:'
+      const host = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? `${window.location.hostname}:8000`
+        : window.location.host
+      const wsUrl = `${protocol}//${host}/ws/${id}`
+      const ws = new WebSocket(wsUrl)
+      wsRef.current = ws
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data)
-      handleServerMessage(data)
-    }
-    ws.onerror = () => {
-      // WS failed — polling fallback already running
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          handleServerMessage(data)
+        } catch (_) {}
+      }
+      ws.onerror = () => {
+        // WS failed — HTTP status polling handles status updates
+      }
+    } catch (_) {
+      // WS error / unsupported on serverless — HTTP status polling handles status updates
     }
   }
 

@@ -98,7 +98,7 @@ class Pipeline:
     ) -> PipelineResult:
         """Run the full pipeline for a given topic."""
         run_id = str(uuid.uuid4())[:8]
-        run_dir = Path(self.config.output.base_dir) / run_id
+        run_dir = self.config.output_dir / run_id
         run_dir.mkdir(parents=True, exist_ok=True)
 
         result = PipelineResult(run_id=run_id, topic=topic, subject="", level="", run_dir=run_dir)
@@ -227,18 +227,30 @@ class Pipeline:
 
             # Ensure 3D viewer config is available for 3D Molecular Viewer panel
             if not sr.viewer_3d_config:
+                xyz_store = {
+                    "O": "3\nWater\nO 0.0000 0.0000 0.1173\nH 0.0000 0.7572 -0.4692\nH 0.0000 -0.7572 -0.4692",
+                    "O=O": "2\nOxygen\nO 0.0000 0.0000 0.6080\nO 0.0000 0.0000 -0.6080",
+                    "N#N": "2\nNitrogen\nN 0.0000 0.0000 0.5490\nN 0.0000 0.0000 -0.5490",
+                    "C": "5\nMethane\nC 0.0000 0.0000 0.0000\nH 0.6291 0.6291 0.6291\nH -0.6291 -0.6291 0.6291\nH 0.6291 -0.6291 -0.6291\nH -0.6291 0.6291 -0.6291",
+                    "O=C=O": "3\nCarbon Dioxide\nC 0.0000 0.0000 0.0000\nO 0.0000 0.0000 1.1600\nO 0.0000 0.0000 -1.1600",
+                }
+
+                def _make_mol_entry(name_str: str, smiles_str: str) -> dict:
+                    xyz = xyz_store.get(smiles_str, xyz_store["O"])
+                    return {"name": name_str, "smiles": smiles_str, "xyz_data": xyz}
+
                 mols = []
                 if scene.molecules:
-                    mols = [{"name": m.name, "smiles": m.smiles} for m in scene.molecules]
+                    mols = [_make_mol_entry(m.name, m.smiles) for m in scene.molecules]
                 elif classifier_out.smiles_list:
                     names = classifier_out.molecule_names or ["Molecule"] * len(classifier_out.smiles_list)
-                    mols = [{"name": n, "smiles": s} for n, s in zip(names, classifier_out.smiles_list)]
+                    mols = [_make_mol_entry(n, s) for n, s in zip(names, classifier_out.smiles_list)]
                 else:
-                    # Atmospheric / general science fallback molecules for 3D viewer
+                    # General science / math fallback 3D structures
                     mols = [
-                        {"name": "Nitrogen (N₂)", "smiles": "N#N"},
-                        {"name": "Oxygen (O₂)", "smiles": "O=O"},
-                        {"name": "Water (H₂O)", "smiles": "O"},
+                        _make_mol_entry("Nitrogen (N₂)", "N#N"),
+                        _make_mol_entry("Oxygen (O₂)", "O=O"),
+                        _make_mol_entry("Water (H₂O)", "O"),
                     ]
                 sr.viewer_3d_config = {
                     "viewer_type": "3dmol",

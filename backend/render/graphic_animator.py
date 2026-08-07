@@ -18,9 +18,12 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 try:
-    from moviepy import ImageSequenceClip
+    from moviepy import ImageSequenceClip, VideoFileClip
 except ImportError:
-    from moviepy.editor import ImageSequenceClip
+    from moviepy.editor import ImageSequenceClip, VideoFileClip
+
+from backend.render.stock_fetcher import fetch_stock_video
+import tempfile
 
 logger = logging.getLogger(__name__)
 
@@ -60,12 +63,34 @@ def generate_scene_video(
     # Detect visual theme based on subject & description
     theme = _detect_theme(subject, title, visual_description)
 
+    # Attempt to fetch stock video background
+    stock_clip = None
+    try:
+        temp_dir = Path(tempfile.mkdtemp(prefix="pexels_"))
+        stock_path = temp_dir / "stock.mp4"
+        query = f"{subject} {title}"
+        downloaded = fetch_stock_video(query, duration, stock_path)
+        if downloaded:
+            stock_clip = VideoFileClip(str(downloaded)).resize(newsize=(width, height))
+    except Exception as e:
+        logger.warning(f"Failed to load stock video: {e}")
+
     for frame_idx in range(n_frames):
         t = frame_idx / fps
         progress = frame_idx / max(n_frames - 1, 1)
 
-        # Create gradient canvas
-        img = _create_gradient_background(width, height, t)
+        # Create background canvas (Stock video or gradient)
+        if stock_clip:
+            # Get frame at time t, loop if video is shorter than needed
+            stock_t = t % stock_clip.duration
+            frame_arr = stock_clip.get_frame(stock_t)
+            img = Image.fromarray(frame_arr).convert("RGBA")
+            # Apply a dark overlay to make text/diagrams pop
+            overlay = Image.new("RGBA", (width, height), (0, 0, 0, 140))
+            img = Image.alpha_composite(img, overlay).convert("RGB")
+        else:
+            img = _create_gradient_background(width, height, t)
+            
         draw = ImageDraw.Draw(img)
 
         # Render Header Badge
@@ -87,10 +112,13 @@ def generate_scene_video(
         frames.append(np.array(img))
 
     clip = ImageSequenceClip(frames, fps=fps)
+    temp_audio = str(output_path.parent / f"{output_path.stem}_temp_audio.m4a")
     clip.write_videofile(
         str(output_path),
+        fps=fps,
         codec="libx264",
         audio_codec="aac",
+        temp_audiofile=temp_audio,
         logger=None,
     )
     clip.close()
@@ -102,9 +130,9 @@ def _detect_theme(subject: str, title: str, desc: str) -> str:
     combined = (subject + " " + title + " " + desc).lower()
     if any(k in combined for k in ["light", "sky", "blue", "optics", "rayleigh", "scattering", "prism", "refraction", "photon"]):
         return "optics"
-    if any(k in combined for k in ["chemistry", "molecule", "atom", "bond", "reaction", "sn2", "water", "h2o", "acid"]):
+    if any(k in combined for k in ["chemistry", "molecule", "atom", "bond", "reaction", "sn2", "water", "h2o", "acid", "element"]):
         return "chemistry"
-    if any(k in combined for k in ["math", "equation", "calculus", "function", "graph", "geometry", "vector"]):
+    if any(k in combined for k in ["math", "mathematics", "euler", "formula", "equation", "calculus", "function", "graph", "geometry", "vector", "derivation", "proof", "trigonometry", "algebra"]):
         return "math"
     return "conceptual"
 
@@ -220,26 +248,53 @@ def _render_chemistry_diagram(draw: ImageDraw.ImageDraw, width: int, height: int
 
 
 def _render_math_diagram(draw: ImageDraw.ImageDraw, width: int, height: int, t: float, progress: float):
-    """Render Animated Function Curve & Coordinate Grid."""
-    cx, cy = width // 2, height // 2 - 10
+    """Render Animated Complex Unit Circle, Euler's Identity & Waves."""
+    cx, cy = width // 2 - 120, height // 2 - 10
+    radius = 90
 
-    # Axes
-    draw.line([(120, cy), (730, cy)], fill=COLOR_TEXT_MUTED, width=2)
-    draw.line([(cx, 80), (cx, 340)], fill=COLOR_TEXT_MUTED, width=2)
+    # Complex Axes (Real Re vs Imaginary Im)
+    draw.line([(cx - 110, cy), (cx + 110, cy)], fill=COLOR_TEXT_MUTED, width=2)
+    draw.line([(cx, cy - 110), (cx, cy + 110)], fill=COLOR_TEXT_MUTED, width=2)
+    draw.text((cx + 120, cy), "Re", fill=COLOR_TEXT_MUTED, anchor="mm")
+    draw.text((cx, cy - 122), "Im (i)", fill=COLOR_ACCENT_CYAN, anchor="mm")
 
-    # Plot Sine Curve
-    points = []
-    for x_pix in range(120, int(120 + progress * 610)):
-        x_val = (x_pix - cx) / 50.0
-        y_val = math.sin(x_val - t * 2) * 80
-        points.append((x_pix, int(cy - y_val)))
+    # Unit Circle
+    draw.ellipse([cx - radius, cy - radius, cx + radius, cy + radius], outline=(60, 90, 160), width=2)
 
-    if len(points) > 1:
-        draw.line(points, fill=COLOR_ACCENT_CYAN, width=3)
+    # Rotating Phasor e^(iθ)
+    theta = (t * 2.0) % (2 * math.pi)
+    px = int(cx + radius * math.cos(theta))
+    py = int(cy - radius * math.sin(theta))
 
-    # Formula Card
-    draw.rectangle([cx - 140, cy + 110, cx + 140, cy + 140], fill=(20, 30, 60), outline=COLOR_ACCENT_PURPLE, width=1)
-    draw.text((cx, cy + 125), "f(x) = sin(x - ωt)", fill=COLOR_WHITE, anchor="mm")
+    # Radius vector line
+    draw.line([(cx, cy), (px, py)], fill=COLOR_ACCENT_YELLOW, width=3)
+    draw.ellipse([px - 6, py - 6, px + 6, py + 6], fill=COLOR_ACCENT_CYAN, outline=COLOR_WHITE, width=2)
+
+    # Cosine projection line (Re)
+    draw.line([(cx, cy), (px, cy)], fill=COLOR_ACCENT_YELLOW, width=3)
+
+    # Sine projection line (Im)
+    draw.line([(px, cy), (px, py)], fill=COLOR_ACCENT_CYAN, width=3)
+
+    # Right side: Sine / Cosine Wave plot
+    wave_start_x = cx + 180
+    draw.line([(wave_start_x, cy), (wave_start_x + 220, cy)], fill=COLOR_TEXT_MUTED, width=1)
+    wave_pts = []
+    for step in range(0, 220, 3):
+        x_val = step / 30.0
+        y_val = math.sin(x_val - theta) * 60
+        wave_pts.append((wave_start_x + step, int(cy - y_val)))
+
+    if len(wave_pts) > 1:
+        draw.line(wave_pts, fill=COLOR_ACCENT_CYAN, width=3)
+
+    # Connecting dashed line from circle point to wave start
+    draw.line([(px, py), (wave_start_x, py)], fill=(100, 120, 160), width=1)
+
+    # Formulas Card
+    draw.rectangle([cx - 120, cy + 125, cx + 380, cy + 160], fill=(20, 30, 60), outline=COLOR_ACCENT_PURPLE, width=1)
+    draw.text((cx + 130, cy + 142), "Euler's Formula:  e^(iθ) = cos(θ) + i·sin(θ)   |   e^(iπ) + 1 = 0", fill=COLOR_WHITE, anchor="mm")
+
 
 
 def _render_conceptual_diagram(

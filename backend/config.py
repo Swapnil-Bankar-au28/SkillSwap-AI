@@ -86,7 +86,14 @@ class AppConfig(BaseModel):
 
     @property
     def output_dir(self) -> Path:
+        # On Vercel / Serverless environments, the project root is read-only.
+        # Use /tmp for writable file storage.
+        if os.environ.get("VERCEL") or os.environ.get("AWS_EXECUTION_ENV") or not os.access(_ROOT, os.W_OK):
+            target = Path("/tmp") / self.output.base_dir
+            target.mkdir(parents=True, exist_ok=True)
+            return target
         return _ROOT / self.output.base_dir
+
 
 
 def load_config(config_path: Optional[Path] = None) -> AppConfig:
