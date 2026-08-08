@@ -3,7 +3,7 @@ services:
     name: eduvis-ai-backend
     env: docker
     region: ohio
-    plan: starter # Adjust based on your Render plan
+    plan: free # 100% Free tier on Render
     rootDir: chem-video-pipeline
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health
