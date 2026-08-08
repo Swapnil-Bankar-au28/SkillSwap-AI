@@ -18,9 +18,12 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 try:
-    from moviepy import ImageSequenceClip
+    from moviepy import ImageSequenceClip, VideoFileClip
 except ImportError:
-    from moviepy.editor import ImageSequenceClip
+    from moviepy.editor import ImageSequenceClip, VideoFileClip
+
+from backend.render.stock_fetcher import fetch_stock_video
+import tempfile
 
 logger = logging.getLogger(__name__)
 
@@ -60,12 +63,34 @@ def generate_scene_video(
     # Detect visual theme based on subject & description
     theme = _detect_theme(subject, title, visual_description)
 
+    # Attempt to fetch stock video background
+    stock_clip = None
+    try:
+        temp_dir = Path(tempfile.mkdtemp(prefix="pexels_"))
+        stock_path = temp_dir / "stock.mp4"
+        query = f"{subject} {title}"
+        downloaded = fetch_stock_video(query, duration, stock_path)
+        if downloaded:
+            stock_clip = VideoFileClip(str(downloaded)).resize(newsize=(width, height))
+    except Exception as e:
+        logger.warning(f"Failed to load stock video: {e}")
+
     for frame_idx in range(n_frames):
         t = frame_idx / fps
         progress = frame_idx / max(n_frames - 1, 1)
 
-        # Create gradient canvas
-        img = _create_gradient_background(width, height, t)
+        # Create background canvas (Stock video or gradient)
+        if stock_clip:
+            # Get frame at time t, loop if video is shorter than needed
+            stock_t = t % stock_clip.duration
+            frame_arr = stock_clip.get_frame(stock_t)
+            img = Image.fromarray(frame_arr).convert("RGBA")
+            # Apply a dark overlay to make text/diagrams pop
+            overlay = Image.new("RGBA", (width, height), (0, 0, 0, 140))
+            img = Image.alpha_composite(img, overlay).convert("RGB")
+        else:
+            img = _create_gradient_background(width, height, t)
+            
         draw = ImageDraw.Draw(img)
 
         # Render Header Badge
