@@ -37,9 +37,10 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# CORS: allow all origins. allow_credentials MUST be False when allow_origins=["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=config.server.cors_origins,
+    allow_origins=["*"],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
