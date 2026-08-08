@@ -4,7 +4,7 @@ import PipelineProgress from './components/PipelineProgress'
 import VideoPlayer from './components/VideoPlayer'
 import Viewer3D from './components/Viewer3D'
 
-const API_BASE = import.meta.env.VITE_API_URL || ''
+const API_BASE = import.meta.env.VITE_API_URL || 'https://eduvis-ai-backend.onrender.com'
 
 const FEATURES = [
   { icon: '🤖', title: 'Multi-Agent AI', desc: 'Specialized agents for research, animation, and fact verification' },
