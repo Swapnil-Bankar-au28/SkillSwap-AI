@@ -4,7 +4,9 @@ import PipelineProgress from './components/PipelineProgress'
 import VideoPlayer from './components/VideoPlayer'
 import Viewer3D from './components/Viewer3D'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://eduvis-ai-backend.onrender.com'
+// Auto-detect: use local proxy when on localhost, Render backend when on Vercel/production
+const IS_LOCAL = window?.location?.hostname === 'localhost' || window?.location?.hostname === '127.0.0.1'
+const API_BASE = IS_LOCAL ? '' : (import.meta.env.VITE_API_URL || 'https://eduvis-ai-backend.onrender.com')
 
 const FEATURES = [
   { icon: '🤖', title: 'Multi-Agent AI', desc: 'Specialized agents for research, animation, and fact verification' },
@@ -72,17 +74,13 @@ export default function App() {
     try {
       let wsUrl;
       if (API_BASE) {
-        // If API_BASE is set, derive ws URL from it
+        // Production: derive ws URL from API_BASE (e.g. Render)
         const wsProtocol = API_BASE.startsWith('https') ? 'wss:' : 'ws:';
         const wsHost = API_BASE.replace(/^https?:\/\//, '');
         wsUrl = `${wsProtocol}//${wsHost}/ws/${id}`;
       } else {
-        const isHttps = window.location.protocol === 'https:';
-        const protocol = isHttps ? 'wss:' : 'ws:';
-        const host = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-          ? `${window.location.hostname}:8000`
-          : window.location.host;
-        wsUrl = `${protocol}//${host}/ws/${id}`;
+        // Local dev: always connect to localhost:8000 directly
+        wsUrl = `ws://localhost:8000/ws/${id}`;
       }
       const ws = new WebSocket(wsUrl)
       wsRef.current = ws
