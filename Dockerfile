@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 
 # Install minimal system dependencies (LaTeX/texlive removed — Manim is disabled on cloud)
-# Cache bust: v3 - hardcoded CORS fix
+# Cache bust: v4 - removed CORSMiddleware import, clean rebuild forced
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     libcairo2-dev \

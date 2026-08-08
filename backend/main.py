@@ -19,11 +19,11 @@ from pathlib import Path
 from typing import Dict, Optional
 
 import uvicorn
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, BackgroundTasks
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, BackgroundTasks, Request, Response
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from backend.config import get_config
 from backend.pipeline import Pipeline, PipelineResult
@@ -37,27 +37,21 @@ app = FastAPI(
     version="1.0.0",
 )
 
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from starlette.responses import Response
-
-# ── Custom CORS Middleware (bypasses Starlette CORSMiddleware bugs) ────────────
+# ── Custom CORS Middleware — manually sets headers, bypasses Starlette bugs ────
 class CORSHandlerMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        # Handle preflight OPTIONS immediately — never forward to route handlers
         if request.method == "OPTIONS":
-            response = Response(status_code=200)
-            response.headers["Access-Control-Allow-Origin"] = "*"
-            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-            response.headers["Access-Control-Allow-Headers"] = "*"
-            response.headers["Access-Control-Max-Age"] = "86400"
-            return response
-
-        # For all other requests, call route and add CORS headers to response
+            # Immediately return 200 for all preflight requests
+            resp = Response(status_code=200, content="OK")
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+            resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, X-Requested-With"
+            resp.headers["Access-Control-Max-Age"] = "86400"
+            return resp
         response = await call_next(request)
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, X-Requested-With"
         return response
 
 app.add_middleware(CORSHandlerMiddleware)
