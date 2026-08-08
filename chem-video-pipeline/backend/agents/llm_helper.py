@@ -21,7 +21,7 @@ FALLBACK_MODELS = [
     "gemma-4-26b-a4b-it",
     "gemini-flash-latest",
     "gemini-3.5-flash",
-    "gemini-2.5-flash",
+    "gemini-3.1-flash-lite",
 ]
 
 

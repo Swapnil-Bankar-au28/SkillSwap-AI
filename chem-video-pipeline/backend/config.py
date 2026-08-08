@@ -61,7 +61,7 @@ class ManimConfig(BaseModel):
 class ServerConfig(BaseModel):
     host: str = "0.0.0.0"
     port: int = 8000
-    cors_origins: List[str] = Field(default_factory=lambda: ["http://localhost:5173"])
+    cors_origins: List[str] = Field(default_factory=lambda: ["*"])
 
 
 class OutputConfig(BaseModel):
