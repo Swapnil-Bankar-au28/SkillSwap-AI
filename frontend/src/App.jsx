@@ -4,7 +4,7 @@ import PipelineProgress from './components/PipelineProgress'
 import VideoPlayer from './components/VideoPlayer'
 import Viewer3D from './components/Viewer3D'
 
-const API_BASE = ''  // Proxied via Vite to localhost:8000
+const API_BASE = import.meta.env.VITE_API_URL || ''
 
 const FEATURES = [
   { icon: '🤖', title: 'Multi-Agent AI', desc: 'Specialized agents for research, animation, and fact verification' },
@@ -70,12 +70,20 @@ export default function App() {
 
   const connectWebSocket = (id) => {
     try {
-      const isHttps = window.location.protocol === 'https:'
-      const protocol = isHttps ? 'wss:' : 'ws:'
-      const host = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-        ? `${window.location.hostname}:8000`
-        : window.location.host
-      const wsUrl = `${protocol}//${host}/ws/${id}`
+      let wsUrl;
+      if (API_BASE) {
+        // If API_BASE is set, derive ws URL from it
+        const wsProtocol = API_BASE.startsWith('https') ? 'wss:' : 'ws:';
+        const wsHost = API_BASE.replace(/^https?:\/\//, '');
+        wsUrl = `${wsProtocol}//${wsHost}/ws/${id}`;
+      } else {
+        const isHttps = window.location.protocol === 'https:';
+        const protocol = isHttps ? 'wss:' : 'ws:';
+        const host = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+          ? `${window.location.hostname}:8000`
+          : window.location.host;
+        wsUrl = `${protocol}//${host}/ws/${id}`;
+      }
       const ws = new WebSocket(wsUrl)
       wsRef.current = ws
 

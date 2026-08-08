@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: eduvis-ai-backend
+    env: docker
+    region: ohio
+    plan: starter # Adjust based on your Render plan
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: GOOGLE_API_KEY
+        sync: false # Set this in the Render dashboard manually
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: FRONTEND_URL
+        value: "https://your-frontend-domain.vercel.app" # Replace with your actual Vercel domain later

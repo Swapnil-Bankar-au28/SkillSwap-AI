@@ -1,4 +1,4 @@
-# EduVis AI — Start Script (run AFTER setup.bat)
+# EduVis AI — Start Script
 # Usage: .\start.ps1
 
 $ErrorActionPreference = "Stop"
@@ -40,5 +40,5 @@ try {
 } finally {
     Stop-Process -Id $backend.Id -ErrorAction SilentlyContinue
     Stop-Process -Id $frontend.Id -ErrorAction SilentlyContinue
-    Write-Host "`nServices stopped." -ForegroundColor Yellow
+    Write-Host "Services stopped." -ForegroundColor Yellow
 }
